@@ -1,0 +1,30 @@
+# Core Blockchain Testing Framework
+eth-brownie==1.20.3
+web3==6.15.1
+eth-account==0.9.0
+
+# Security Testing Tools
+slither-analyzer==0.9.6
+hypothesis==6.92.1
+py-evm==0.10.1
+
+# Development & Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-xdist==3.3.1
+pytest-brownie==0.1.0
+
+# Utilities
+requests==2.31.0
+python-dotenv==1.0.0
+pydantic==2.5.0
+rich==13.7.0
+
+# Static Analysis
+mypy==1.7.1
+black==23.11.0
+flake8==6.1.0
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==1.3.0

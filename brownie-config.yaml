@@ -1,0 +1,119 @@
+# Brownie Configuration for Blockchain Security Testing
+
+# Project structure
+project_structure:
+    contracts: contracts
+    interfaces: interfaces
+    scripts: scripts
+    tests: tests
+    build: build
+    reports: reports
+
+# Network configurations
+networks:
+  default: development
+  development:
+    cmd: ganache-cli
+    cmd_settings:
+      accounts: 10
+      mnemonic: "test test test test test test test test test test test junk"
+      port: 8545
+      gas_limit: 12000000
+      accounts:
+        - mnemonic: "test test test test test test test test test test test junk"
+          balance: "100 ether"
+        - mnemonic: "test test test test test test test test test test test junk"
+          balance: "50 ether"
+        - mnemonic: "test test test test test test test test test test test junk"
+          balance: "25 ether"
+  
+  # Testnet configurations
+  goerli:
+    cmd: ganache-cli
+    cmd_settings:
+      fork: "https://eth-goerli.alchemyapi.io/v2/YOUR_API_KEY"
+      accounts: 10
+      port: 8545
+  
+  sepolia:
+    cmd: ganache-cli
+    cmd_settings:
+      fork: "https://eth-sepolia.alchemyapi.io/v2/YOUR_API_KEY"
+      accounts: 10
+      port: 8545
+
+# Compiler settings
+compiler:
+  solc:
+    version: "0.8.19"
+    evm_version: "paris"
+    optimize: true
+    runs: 200
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.9.0"
+
+# Dependencies
+dependencies:
+  - OpenZeppelin/openzeppelin-contracts@4.9.0
+  - smartcontractkit/chainlink-brownie-contracts@1.1.1
+
+# Testing configuration
+pytest:
+  # Test discovery patterns
+  testpaths:
+    - tests
+  python_files:
+    - test_*.py
+    - *_test.py
+  python_classes:
+    - Test*
+  python_functions:
+    - test_*
+  
+  # Test execution
+  addopts:
+    - -v
+    - --tb=short
+    - --strict-markers
+    - --disable-warnings
+    - --cov=contracts
+    - --cov-report=html
+    - --cov-report=term-missing
+    - --html=reports/report.html
+    - --self-contained-html
+  
+  # Test markers
+  markers:
+    security: "Security vulnerability tests"
+    defi: "DeFi protocol tests"
+    gas: "Gas optimization tests"
+    integration: "Integration tests"
+    unit: "Unit tests"
+    property: "Property-based tests"
+    fuzz: "Fuzzing tests"
+
+# Gas reporting
+gas:
+  display: "gas_used"
+  exclude_contracts:
+    - SafeMath
+    - Address
+    - Context
+
+# Console output
+console:
+  show_colors: true
+  show_events: true
+  show_internal_txs: false
+
+# Reporting
+reports:
+  coverage:
+    html: reports/coverage
+    json: reports/coverage.json
+  gas:
+    json: reports/gas_report.json
+    csv: reports/gas_report.csv
+  security:
+    json: reports/security_report.json
+    html: reports/security_report.html
