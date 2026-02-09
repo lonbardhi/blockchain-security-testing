@@ -24,13 +24,27 @@ A comprehensive Python-based smart contract security testing framework using Bro
 
 ```
 blockchain-security-testing/
-├── contracts/           # Solidity smart contracts
-├── tests/              # Security test suites
-├── scripts/            # Deployment and utility scripts
-├── utils/              # Testing utilities and helpers
-├── reports/            # Test reports and analysis
-├── docs/               # Documentation
-└── brownie-config.yaml # Brownie configuration
+├── contracts/              # Smart contracts
+│   ├── SimpleToken.sol      # ERC20 token with security features
+│   ├── VulnerableVault.sol  # Intentionally vulnerable contract
+│   ├── SecureVault.sol      # Secure vault with best practices
+│   ├── DeFiPool.sol        # DeFi liquidity pool
+│   ├── AuctionContract.sol   # Auction platform with vulnerabilities
+│   ├── NFTMarketplace.sol   # NFT marketplace with security issues
+│   └── TokenSale.sol        # Token sale contract with vulnerabilities
+├── tests/                  # Security test suites
+│   ├── test_security_comprehensive.py  # Comprehensive security tests
+│   ├── test_reentrancy_specific.py    # Reentrancy-specific tests
+│   └── test_sample_contracts.py        # Tests for sample contracts
+├── scripts/                # Utility scripts
+│   ├── deploy_contracts.py  # Contract deployment
+│   └── run_security_tests.py # Test runner
+├── utils/                  # Testing utilities
+│   └── security_helpers.py  # Security testing helpers
+├── reports/                # Test reports and analysis
+├── docs/                   # Documentation
+├── brownie-config.yaml      # Brownie configuration
+└── requirements.txt        # Python dependencies
 ```
 
 ## 🚀 **Quick Start**

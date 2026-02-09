@@ -92,7 +92,8 @@ def generate_comprehensive_report():
     # Collect test results
     test_files = [
         "test_security_comprehensive.py",
-        "test_reentrancy_specific.py"
+        "test_reentrancy_specific.py",
+        "test_sample_contracts.py"
     ]
     
     total_vulnerabilities = 0

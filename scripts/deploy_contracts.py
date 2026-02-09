@@ -1,7 +1,7 @@
 """
 Deployment script for smart contracts
 """
-from brownie import network, accounts, SimpleToken, VulnerableVault, DeFiPool
+from brownie import network, accounts, SimpleToken, VulnerableVault, DeFiPool, AuctionContract, NFTMarketplace, TokenSale, SecureVault
 from brownie.network import priority_fee
 import json
 import time
@@ -45,7 +45,29 @@ def deploy_vulnerable_vault():
     print(f"✅ VulnerableVault deployed at: {vault.address}")
     print(f"Owner: {vault.owner()}")
     
-    # Fund the vault for testing
+    # Fund vault for testing
+    fund_amount = "10 ether"
+    deployer.transfer(vault.address, fund_amount)
+    print(f"💰 Funded vault with {fund_amount}")
+    print(f"Vault balance: {vault.balance()}")
+    
+    return vault
+
+
+def deploy_secure_vault():
+    """Deploy SecureVault contract"""
+    print("🚀 Deploying SecureVault...")
+    
+    deployer = accounts[0]
+    print(f"Deploying from: {deployer.address}")
+    
+    # Deploy contract
+    vault = SecureVault.deploy({"from": deployer})
+    
+    print(f"✅ SecureVault deployed at: {vault.address}")
+    print(f"Owner: {vault.owner()}")
+    
+    # Fund vault for testing
     fund_amount = "10 ether"
     deployer.transfer(vault.address, fund_amount)
     print(f"💰 Funded vault with {fund_amount}")
@@ -74,6 +96,83 @@ def deploy_defi_pool(token_address, reward_token_address):
     print(f"Reward rate: {pool.rewardRate()}")
     
     return pool
+
+
+def deploy_auction_contract():
+    """Deploy AuctionContract"""
+    print("🚀 Deploying AuctionContract...")
+    
+    deployer = accounts[0]
+    print(f"Deploying from: {deployer.address}")
+    
+    # Deploy contract
+    auction = AuctionContract.deploy({"from": deployer})
+    
+    print(f"✅ AuctionContract deployed at: {auction.address}")
+    print(f"Next auction ID: {auction.nextAuctionId()}")
+    
+    # Fund contract for testing
+    fund_amount = "5 ether"
+    deployer.transfer(auction.address, fund_amount)
+    print(f"💰 Funded auction contract with {fund_amount}")
+    print(f"Contract balance: {auction.address.balance()}")
+    
+    return auction
+
+
+def deploy_nft_marketplace():
+    """Deploy NFTMarketplace"""
+    print("🚀 Deploying NFTMarketplace...")
+    
+    deployer = accounts[0]
+    print(f"Deploying from: {deployer.address}")
+    
+    # Deploy contract
+    marketplace = NFTMarketplace.deploy({"from": deployer})
+    
+    print(f"✅ NFTMarketplace deployed at: {marketplace.address}")
+    print(f"Marketplace fee: {marketplace.marketplaceFee()}")
+    
+    return marketplace
+
+
+def deploy_token_sale():
+    """Deploy TokenSale"""
+    print("🚀 Deploying TokenSale...")
+    
+    deployer = accounts[0]
+    print(f"Deploying from: {deployer.address}")
+    
+    # Deploy contract
+    token_sale = TokenSale.deploy(
+        accounts[1],  # Mock token address
+        accounts[0],  # Wallet
+        block.timestamp + 3600,  # Start in 1 hour
+        86400,  # 24 hour duration
+        {"from": deployer}
+    )
+    
+    print(f"✅ TokenSale deployed at: {token_sale.address}")
+    print(f"Token address: {token_sale.token()}")
+    print(f"Wallet: {token_sale.wallet()}")
+    print(f"Sale start time: {token_sale.saleStartTime()}")
+    print(f"Sale end time: {token_sale.saleEndTime()}")
+    
+    # Create sale tier
+    token_sale.createSaleTier(
+        1,  # Tier ID
+        1000,  # Rate (1000 tokens per ETH)
+        0.1 ether,  # Min purchase
+        10 ether,  # Max purchase
+        100 ether,  # Hard cap
+        {"from": deployer}
+    )
+    
+    # Start sale
+    token_sale.startSale({"from": deployer})
+    print("✅ Token sale started")
+    
+    return token_sale
 
 
 def deploy_mock_erc20(name, symbol, initial_supply, deployer=None):
@@ -110,11 +209,42 @@ def main():
         }
         
         # Deploy VulnerableVault
-        vault = deploy_vulnerable_vault()
+        vulnerable_vault = deploy_vulnerable_vault()
         deployed_contracts["VulnerableVault"] = {
-            "address": vault.address,
-            "owner": vault.owner(),
-            "balance": str(vault.balance())
+            "address": vulnerable_vault.address,
+            "owner": vulnerable_vault.owner(),
+            "balance": str(vulnerable_vault.balance())
+        }
+        
+        # Deploy SecureVault
+        secure_vault = deploy_secure_vault()
+        deployed_contracts["SecureVault"] = {
+            "address": secure_vault.address,
+            "owner": secure_vault.owner(),
+            "balance": str(secure_vault.balance())
+        }
+        
+        # Deploy AuctionContract
+        auction = deploy_auction_contract()
+        deployed_contracts["AuctionContract"] = {
+            "address": auction.address,
+            "next_auction_id": str(auction.nextAuctionId())
+        }
+        
+        # Deploy NFTMarketplace
+        marketplace = deploy_nft_marketplace()
+        deployed_contracts["NFTMarketplace"] = {
+            "address": marketplace.address,
+            "marketplace_fee": str(marketplace.marketplaceFee())
+        }
+        
+        # Deploy TokenSale
+        token_sale = deploy_token_sale()
+        deployed_contracts["TokenSale"] = {
+            "address": token_sale.address,
+            "token": token_sale.token(),
+            "wallet": token_sale.wallet(),
+            "sale_active": token_sale.saleActive()
         }
         
         # Deploy mock tokens for DeFiPool
@@ -173,17 +303,40 @@ def setup_test_environment():
         print(f"💰 Minted {amount} tokens to {account.address}")
     
     # Setup vault scenarios
-    vault_address = contracts["VulnerableVault"]["address"]
-    vault = VulnerableVault.at(vault_address)
+    vulnerable_vault_address = contracts["VulnerableVault"]["address"]
+    vulnerable_vault = VulnerableVault.at(vulnerable_vault_address)
     
-    # Make deposits to vault
+    secure_vault_address = contracts["SecureVault"]["address"]
+    secure_vault = SecureVault.at(secure_vault_address)
+    
+    # Make deposits to vaults
     for i, account in enumerate(test_accounts):
         amount = (i + 1) * 1 ether
-        vault.deposit({"from": account, "value": amount})
-        print(f"💰 Deposited {amount} ETH to vault from {account.address}")
+        
+        # Deposit to vulnerable vault
+        vulnerable_vault.deposit({"from": account, "value": amount})
+        print(f"💰 Deposited {amount} ETH to vulnerable vault from {account.address}")
+        
+        # Deposit to secure vault
+        secure_vault.deposit({"from": account, "value": amount})
+        print(f"💰 Deposited {amount} ETH to secure vault from {account.address}")
     
-    print(f"Final vault balance: {vault.balance()}")
-    print(f"Total deposits: {vault.totalDeposits()}")
+    print(f"Final vulnerable vault balance: {vulnerable_vault.balance()}")
+    print(f"Final secure vault balance: {secure_vault.balance()}")
+    
+    # Setup auction scenarios
+    auction_address = contracts["AuctionContract"]["address"]
+    auction = AuctionContract.at(auction_address)
+    
+    # Create test auctions
+    for i, account in enumerate(test_accounts):
+        auction_id = auction.createAuction(
+            f"Test Auction {i+1}",
+            1000,  # 1000 blocks duration
+            0.1 ether,  # Min bid increment
+            {"from": account}
+        )
+        print(f"🏛️ Created auction {auction_id} by {account.address}")
     
     # Save test setup info
     setup_info = {
@@ -192,12 +345,17 @@ def setup_test_environment():
             str(account.address): str(token.balanceOf(account)) 
             for account in test_accounts
         },
-        "vault_balances": {
-            str(account.address): str(vault.balances(account)) 
+        "vulnerable_vault_balances": {
+            str(account.address): str(vulnerable_vault.balances(account)) 
             for account in test_accounts
         },
-        "vault_total_balance": str(vault.balance()),
-        "vault_total_deposits": str(vault.totalDeposits())
+        "secure_vault_balances": {
+            str(account.address): str(secure_vault.balances(account)) 
+            for account in test_accounts
+        },
+        "vulnerable_vault_total_balance": str(vulnerable_vault.balance()),
+        "secure_vault_total_balance": str(secure_vault.balance()),
+        "auctions_created": len(test_accounts)
     }
     
     with open("reports/test_setup.json", "w") as f:
@@ -218,4 +376,4 @@ if __name__ == "__main__":
     contracts, setup_info = setup_test_environment()
     
     print("\n🎯 Ready for security testing!")
-    print("Run: brownie test tests/test_security_comprehensive.py")
+    print("Run: brownie test tests/test_sample_contracts.py")
